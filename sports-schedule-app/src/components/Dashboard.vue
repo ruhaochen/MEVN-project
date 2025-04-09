@@ -2,9 +2,6 @@
 import { ref, onMounted, computed } from 'vue';
 import axios from 'axios';
 import { useRouter } from 'vue-router';
-import CreateEvent from "../views/CreateEvent.vue";
-import CreateTeam from '../views/CreateTeam.vue';
-import CreateLeague from '../views/CreateLeague.vue';
 import EventTable from './EventTable.vue';
 import * as jwt_decode from 'jwt-decode';
 
@@ -12,6 +9,7 @@ const router = useRouter();
 const secureMessage = ref('');
 const userId = ref('');
 const userName = ref('');
+const showMobileMenu = ref(false);
 
 // Admin Check
 const isAdmin = computed(() => {
@@ -83,14 +81,29 @@ const closeLeagueModal = () => {
     <nav class="navbar is-dark is-fixed-top has-shadow" role="navigation" aria-label="main navigation">
       <div class="container is-fluid">
         <div class="navbar-brand">
-          <a class="navbar-item has-text-weight-bold is-size-4">
-            <span class="has-text-primary">ATHLETICS</span>
+          <a class="navbar-item has-text-weight-bold is-size-5-mobile is-size-4-tablet">
+            <router-link to="/dashboard">
+              <span class="has-text-primary">ATHLETICS</span>
+            </router-link>
+          </a>
+          
+          <!-- Burger menu for mobile -->
+          <a role="button" 
+             class="navbar-burger" 
+             aria-label="menu" 
+             aria-expanded="false" 
+             data-target="navbarBasic"
+             @click="showMobileMenu = !showMobileMenu"
+             :class="{ 'is-active': showMobileMenu }">
+            <span aria-hidden="true"></span>
+            <span aria-hidden="true"></span>
+            <span aria-hidden="true"></span>
           </a>
         </div>
 
-        <div class="navbar-menu is-active">
+        <div id="navbarBasic" class="navbar-menu" :class="{ 'is-active': showMobileMenu }">
           <div class="navbar-end">
-            <div class="navbar-item">
+            <div class="navbar-item is-hidden-mobile">
               <span class="has-text-weight-semibold is-size-6">
                 Welcome, <span class="has-text-info">{{ userName }}</span>
               </span>
@@ -101,29 +114,27 @@ const closeLeagueModal = () => {
                 <span class="icon">
                   <i class="fas fa-cog"></i>
                 </span>
+                <span class="is-hidden-mobile">Admin</span>
               </a>
               <div class="navbar-dropdown is-right">
-                <a class="navbar-item" @click="openLeagueModal">
-                  <CreateLeague :showLeagueModal="showLeagueModal" @close-league-modal="closeLeagueModal"></CreateLeague>
+                <router-link to="/dashboard/leagues" class="navbar-item">
                   <span class="icon is-small mr-2">
                     <i class="fas fa-trophy"></i>
                   </span>
                   Leagues
-                </a>
-                <a class="navbar-item" @click="openEventModal">
-                  <CreateEvent :showEventModal="showEventModal" @close-event-modal="closeEventModal"></CreateEvent>
+                </router-link>
+                <router-link to="/dashboard/events" class="navbar-item">
                   <span class="icon is-small mr-2">
                     <i class="fas fa-calendar-alt"></i>
                   </span>
                   Events
-                </a>
-                <a class="navbar-item" @click="openTeamModal">
-                  <CreateTeam :showTeamModal="showTeamModal" @close-team-modal="closeTeamModal"></CreateTeam>
+                </router-link>
+                <router-link to="/dashboard/teams" class="navbar-item">
                   <span class="icon is-small mr-2">
                     <i class="fas fa-users"></i>
                   </span>
                   Teams
-                </a>
+                </router-link>
                 <hr class="navbar-divider">
                 <a class="navbar-item" @click="logout">
                   <span class="icon is-small mr-2">
@@ -134,11 +145,11 @@ const closeLeagueModal = () => {
               </div>
             </div>
             <div v-else class="navbar-item">
-              <button class="button is-info is-outlined" @click="logout">
+              <button class="button is-info is-outlined is-small-mobile" @click="logout">
                 <span class="icon">
                   <i class="fas fa-sign-out-alt"></i>
                 </span>
-                <span>Logout</span>
+                <span class="is-hidden-mobile">Logout</span>
               </button>
             </div>
           </div>
@@ -148,16 +159,15 @@ const closeLeagueModal = () => {
 
     <!-- Dashboard Content -->
     <section class="section dashboard-content is-fullwidth">
-      <div class = "content-wrapper">
+      <router-view v-if="$route.matched.length > 1"></router-view> <!-- Shows nested routes -->
+      
+      <div v-else class="content-wrapper"> <!-- Default dashboard content -->
         <div class="level">
           <div class="level-item has-text-centered">
-            <h1 class="title has-text-light">Dashboard</h1>
+            <h1 class="title has-text-light is-size-4-mobile">Dashboard</h1>
           </div>
         </div>
-
-        <!-- Event Table -->
         <EventTable :isAdmin="isAdmin"></EventTable>
-
       </div>
     </section>
   </div>
@@ -167,21 +177,17 @@ const closeLeagueModal = () => {
 .dashboard-layout {
   background-color: #121212;
   min-height: 100vh;
-  width: 100vw; 
-  margin: 0;     
-  padding: 0;    
-}
-
-.dashboard-layout{
-  width: 100%
+  width: 100%;
 }
 
 .dashboard-content {
-  padding-top: 5rem;
+  padding-top: 4rem;
+  padding-left: 1rem;
+  padding-right: 1rem;
 }
 
 .navbar {
-  min-height: 4rem;
+  min-height: 3.5rem;
 }
 
 .navbar-item img {
@@ -196,15 +202,20 @@ const closeLeagueModal = () => {
   border-color: #3273dc;
 }
 
-.dashboard-content {
-  padding-top: 5rem;
-  padding-left: 1.5rem;
-  padding-right: 1.5rem;
-  width: 100%;
-}
-
-.content-wrapper {
-  max-width: 100%;
-  width: 100%;
+/* Mobile-specific styles */
+@media screen and (max-width: 768px) {
+  .dashboard-content {
+    padding-top: 3.5rem;
+    padding-left: 0.75rem;
+    padding-right: 0.75rem;
+  }
+  
+  .navbar-item .button {
+    font-size: 0.875rem;
+  }
+  
+  .navbar-brand .navbar-item {
+    padding: 0.5rem 0.75rem;
+  }
 }
 </style>

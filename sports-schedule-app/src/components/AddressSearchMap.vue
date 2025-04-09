@@ -57,7 +57,7 @@ const geocodeAddress = async () => {
   formattedAddress.value = '';
   
   try {
-    const response = await fetch(`http://localhost:3000/api/geocode?address=${encodeURIComponent(address.value)}`);
+    const response = await fetch(`https://mevn-project-vjik.onrender.com/api/geocode?address=${encodeURIComponent(address.value)}`);
     
     if (!response.ok) {
       throw new Error(`HTTP error! status: ${response.status}`);

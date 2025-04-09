@@ -18,7 +18,7 @@ const emit = defineEmits(['close-team-modal']);
 
 const fetchLeagues = async () => {
     try {
-        const response = await fetch("http://localhost:3000/api/leagues");
+        const response = await fetch("https://mevn-project-vjik.onrender.com/api/leagues");
         leagues.value = await response.json();
     } catch (error) {
         console.error("Error fetching leagues:", error);
@@ -36,7 +36,7 @@ onMounted(async () => {
 const createTeam = async () => {
     const leagueId = league.value._id; 
     try {
-        const response = await fetch("http://localhost:3000/api/teams", {
+        const response = await fetch("https://mevn-project-vjik.onrender.com/api/teams", {
             method: "POST",
             headers: {
                 "Content-Type": "application/json",

@@ -17,7 +17,7 @@ const app = createApp(App);
 
 // app.mount('#app');
 
-axios.defaults.baseURL = 'http://localhost:3000';
+axios.defaults.baseURL = 'https://mevn-project-vjik.onrender.com';
 
 axios.get('/api/maps-key')
   .then(res => {
@@ -36,3 +36,6 @@ axios.get('/api/maps-key')
   .catch(err => {
     console.error('Error loading Google Maps API key:', err);
 });
+
+// app.use(router);
+// app.mount('#app');

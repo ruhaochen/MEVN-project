@@ -22,7 +22,7 @@ const emit = defineEmits(['close-event-modal']);
 
 const fetchLeagues = async () => {
     try {
-        const response = await fetch("http://localhost:3000/api/leagues");
+        const response = await fetch("https://mevn-project-vjik.onrender.com/api/leagues");
         leagues.value = await response.json();
     } catch (error) {
         console.error("Error fetching leagues:", error);
@@ -30,7 +30,7 @@ const fetchLeagues = async () => {
 };
 
 const fetchTeams = async () => {
-    const link = "http://localhost:3000/api/leagues/" + league.value._id + "/teams";
+    const link = "https://mevn-project-vjik.onrender.com/api/leagues/" + league.value._id + "/teams";
     try {
         const response = await fetch(link);
         teams.value = await response.json();
@@ -63,7 +63,7 @@ const createEvent = async () => {
     const opposingTeamId = opposingTeam.value._id;
     const leagueId = league.value._id;
     try {
-        const response = await fetch("http://localhost:3000/api/events", {
+        const response = await fetch("https://mevn-project-vjik.onrender.com/api/events", {
             method: "POST",
             headers: {
                 "Content-Type": "application/json",
