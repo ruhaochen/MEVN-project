@@ -1,0 +1,4 @@
+backend/.env
+backend/node_modules/
+sports-schedule-app/node_modules/
+sports-schedule-app/README.md
