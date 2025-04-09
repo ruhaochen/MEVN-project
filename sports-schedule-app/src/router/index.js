@@ -1,6 +1,9 @@
 import { createRouter, createWebHistory } from 'vue-router';
 import Login from '../components/Login.vue';
 import Dashboard from '../components/Dashboard.vue';
+import TeamsPage from '../views/TeamsPage.vue';
+import EventsPage from '../views/EventsPage.vue';
+import LeaguesPage from '../views/LeaguesPage.vue';
 
 const routes = [
   { 
@@ -12,7 +15,21 @@ const routes = [
     path: '/dashboard', 
     name: 'Dashboard', 
     component: Dashboard,
-    meta: { requiresAuth: true } // Still protect the dashboard
+    meta: { requiresAuth: true }, // Still protect the dashboard
+    children: [
+      {
+        path: 'leagues',
+        component: LeaguesPage
+      },
+      {
+        path: 'teams',
+        component: TeamsPage
+      },
+      {
+        path: 'events',
+        component: EventsPage
+      }
+    ]
   },
   // Redirect root to dashboard
   { path: '/', redirect: '/dashboard' }

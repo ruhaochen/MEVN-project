@@ -1,5 +1,6 @@
 <script setup>
 import { ref, onMounted, watch, computed } from "vue";
+import LocationModal from "./LocationModal.vue";
 
 const events = ref([]);
 const leagues = ref([]);
@@ -7,6 +8,10 @@ const teams = ref([]);
 const selectedLeagues = ref([]); 
 const selectedTeam = ref("");
 const selectedDateRange = ref("");
+const showLocationModal = ref(false);
+const selectedLocation = ref('');
+const teamLocationCache = ref({});
+const showMobileFilters = ref(false);
 
 const props = defineProps({
     isAdmin:{
@@ -15,18 +20,39 @@ const props = defineProps({
     }
 });
 
+const viewLocation = async (event) => {
+  selectedLocation.value = await getLocationAddress(event);
+  showLocationModal.value = true;
+};
+
+const getLocationAddress = async (event) => {
+  // Handle school gyms
+  if (['us-gym', 'prep-gym'].includes(event.location)) {
+    return '85 Moatfield Drive, Toronto, ON M3B 3L6, Canada';
+  }
+  
+  // Handle opposing gym - fetch team location
+  if (event.location === 'opposing-gym' && event.opposingTeamId) {
+    try {
+      const team = await fetch(`https://mevn-project-vjik.onrender.com/api/teams/${event.opposingTeamId}`)
+        .then(res => res.json());
+      return team.location || 'Address not available';
+    } catch {
+      return 'Could not load opponent address';
+    }
+  }
+  
+  // If no specific location is set, return a generic message
+  return 'Location not specified';
+};
+
 const fetchLeagues = async () => {
-    const response = await fetch("http://localhost:3000/api/leagues");
+    const response = await fetch("https://mevn-project-vjik.onrender.com/api/leagues");
     leagues.value = await response.json();
 };
 
-// const fetchTeams = async () => {
-//     const response = await fetch("http://localhost:3000/api/teams");
-//     teams.value = await response.json();
-// };
-
 const fetchTeams = async () => {
-    const response = await fetch("http://localhost:3000/api/teams");
+    const response = await fetch("https://mevn-project-vjik.onrender.com/api/teams");
     const allTeams = await response.json();
     
     // Group teams by name and collect their IDs
@@ -91,7 +117,7 @@ const fetchEvents = async () => {
         query.append("startDate", startDate);
         query.append("endDate", endDate);
     }
-    const response = await fetch(`http://localhost:3000/api/events?${query.toString()}`);
+    const response = await fetch(`https://mevn-project-vjik.onrender.com/api/events?${query.toString()}`);
     events.value = await response.json();
 };
 
@@ -145,24 +171,17 @@ const dateRanges = ref([
 <template>
   <div class="event-table-container">
     <!-- Team Filter -->
-    <div class="box filter-box mb-6">
+    <div class="box filter-box mb-3">
       <div class="field">
-        <label class="label has-text-light">Filter by Opposing Team</label>
+        <label class="label has-text-light is-hidden-mobile">Filter by Opposing Team</label>
+        <label class="label has-text-light is-hidden-tablet">Team Filter</label>
         <div class="control has-icons-left">
-          <!-- <div class="select is-fullwidth is-medium">
-            <select v-model="selectedTeam">
-              <option value="">All Teams</option>
-              <option v-for="team in teams" :key="team._id" :value="team._id">
-                {{ team.name }} - {{ team.school }}
-              </option>
-            </select>
-          </div> -->
-          <div class="select is-fullwidth is-medium">
+          <div class="select is-fullwidth is-medium-mobile">
               <select v-model="selectedTeam">
                   <option :value="null">All Teams</option>
                   <option v-for="team in teams" :key="team.name" :value="team">
                       {{ team.name }} - {{ team.school }}
-                      <span v-if="team.leagues.length > 1">({{ team.leagues.length }} leagues)</span>
+                      <span v-if="team.leagues.length > 1">({{ team.leagues.length }})</span>
                   </option>
               </select>
           </div>
@@ -174,10 +193,10 @@ const dateRanges = ref([
     </div>
 
     <!-- Date Range Buttons -->
-    <div class="field is-grouped is-grouped-centered mb-6">
+    <div class="field is-grouped is-grouped-multiline mb-4">
       <div class="control" v-for="range in dateRanges" :key="range.value">
         <button
-          class="button is-medium"
+          class="button is-small-mobile"
           :class="{
             'is-info': selectedDateRange !== range.value,
             'is-primary': selectedDateRange === range.value
@@ -189,10 +208,10 @@ const dateRanges = ref([
     </div>
 
     <!-- Main Content -->
-    <div class="columns is-desktop is-gapless">
+    <div class="columns is-desktop is-gapless is-mobile">
       <!-- League Filter Column -->
-      <div class="column sidebar-column">
-        <div class="box filter-box sidebar-box">
+      <div class="column is-3-widescreen is-4-desktop is-12-mobile">
+        <div class="box filter-box sidebar-box is-hidden-mobile">
           <h3 class="title is-5 has-text-light mb-5">
             <span class="icon-text">
               <span class="icon">
@@ -226,14 +245,59 @@ const dateRanges = ref([
             </div>
           </div>
         </div>
+        
+        <!-- Mobile league filter toggle -->
+        <button class="button is-fullwidth is-info is-outlined mb-3 is-hidden-tablet"
+                @click="showMobileFilters = !showMobileFilters">
+          <span class="icon">
+            <i class="fas fa-filter"></i>
+          </span>
+          <span>Filter Leagues</span>
+        </button>
+        
+        <!-- Mobile league filter dropdown -->
+        <div class="box filter-box mb-3" v-if="showMobileFilters">
+          <h3 class="title is-5 has-text-light mb-3">
+            <span class="icon-text">
+              <span class="icon">
+                <i class="fas fa-trophy"></i>
+              </span>
+              <span>Leagues</span>
+            </span>
+          </h3>
+          
+          <div v-for="season in groupedLeagues" :key="season.name" class="mb-3">
+            <h4 class="subtitle is-6 has-text-weight-semibold mb-2 has-text-info">
+              <span class="icon is-small">
+                <i class="fas fa-calendar"></i>
+              </span>
+              {{ season.name }}
+            </h4>
+            
+            <div class="league-options-mobile">
+              <div class="field" v-for="league in season.leagues" :key="league._id">
+                <input 
+                  :id="'mobile-league-' + league._id"
+                  type="checkbox" 
+                  :value="league._id" 
+                  v-model="selectedLeagues"
+                  class="is-checkradio is-info"
+                  :checked="selectedLeagues.includes(league._id)">
+                <label :for="'mobile-league-' + league._id" class="has-text-light">
+                  {{ formatLeagueName(league) }}
+                </label>
+              </div>
+            </div>
+          </div>
+        </div>
       </div>
 
       <!-- Events Column -->
-      <div class="column">
+      <div class="column is-9-widescreen is-8-desktop is-12-mobile">
         <div class="box content-box">
           <div class="level">
             <div class="level-left">
-              <h3 class="title is-4 has-text-light">
+              <h3 class="title is-4 has-text-light is-size-5-mobile">
                 <span class="icon-text">
                   <span class="icon">
                     <i class="fas fa-calendar-alt"></i>
@@ -242,18 +306,11 @@ const dateRanges = ref([
                 </span>
               </h3>
             </div>
-            <!-- <div class="level-right">
-              <button class="button is-small is-info is-outlined">
-                <span class="icon">
-                  <i class="fas fa-sync-alt"></i>
-                </span>
-                <span>Refresh</span>
-              </button>
-            </div> -->
           </div>
 
           <div class="table-container">
-            <table class="table is-fullwidth is-hoverable">
+            <!-- Desktop table -->
+            <table class="table is-fullwidth is-hoverable is-hidden-mobile">
               <thead>
                 <tr>
                   <th class="has-text-light">Date</th>
@@ -275,14 +332,13 @@ const dateRanges = ref([
                   <td class="has-text-light">{{ event.notes }}</td>
                   <td>
                     <div class="buttons are-small">
-                      <button class="button is-info is-outlined" title="View Location">
+                      <button 
+                        class="button is-info is-outlined" 
+                        title="View Location"
+                        @click="viewLocation(event)"
+                      >
                         <span class="icon">
                           <i class="fas fa-map-marker-alt"></i>
-                        </span>
-                      </button>
-                      <button v-if="isAdmin" class="button is-success is-outlined" title="Edit">
-                        <span class="icon">
-                          <i class="fas fa-edit"></i>
                         </span>
                       </button>
                     </div>
@@ -290,22 +346,85 @@ const dateRanges = ref([
                 </tr>
               </tbody>
             </table>
-          </div>
-          
-          <div v-if="!events.length" class="has-text-centered py-6">
-            <div class="notification is-dark">
-              <span class="icon-text">
-                <span class="icon">
-                  <i class="fas fa-calendar-times"></i>
-                </span>
-                <span>No events found matching your criteria</span>
-              </span>
+            
+            <!-- Mobile cards view -->
+            <div class="is-hidden-tablet">
+              <div v-for="event in events" :key="event._id" class="card mb-3 event-card">
+                <div class="card-content">
+                  <div class="media">
+                    <div class="media-content">
+                      <p class="title is-5 has-text-light">{{ capitalizeWords(event.type) }}</p>
+                      <p class="subtitle is-6 has-text-info">
+                        {{ formatDate(event.date) }} at {{ formatTime(event.time) }}
+                      </p>
+                    </div>
+                  </div>
+                  
+                  <div class="content">
+                    <p class="has-text-light">
+                      <span class="icon-text">
+                        <span class="icon has-text-info">
+                          <i class="fas fa-map-marker-alt"></i>
+                        </span>
+                        <span>{{ event.location }}</span>
+                      </span>
+                    </p>
+                    
+                    <p class="has-text-light">
+                      <span class="icon-text">
+                        <span class="icon has-text-info">
+                          <i class="fas fa-users"></i>
+                        </span>
+                        <span>vs {{ event.opposingTeam }}</span>
+                      </span>
+                    </p>
+                    
+                    <p v-if="event.notes" class="has-text-light mt-2">
+                      <span class="icon-text">
+                        <span class="icon has-text-info">
+                          <i class="fas fa-sticky-note"></i>
+                        </span>
+                        <span>{{ event.notes }}</span>
+                      </span>
+                    </p>
+                    
+                    <div class="buttons mt-3">
+                      <button 
+                        class="button is-info is-outlined is-small" 
+                        title="View Location"
+                        @click="viewLocation(event)"
+                      >
+                        <span class="icon">
+                          <i class="fas fa-map-marker-alt"></i>
+                        </span>
+                        <span>Location</span>
+                      </button>
+                    </div>
+                  </div>
+                </div>
+              </div>
+              
+              <div v-if="!events.length" class="has-text-centered py-4">
+                <div class="notification is-dark">
+                  <span class="icon-text">
+                    <span class="icon">
+                      <i class="fas fa-calendar-times"></i>
+                    </span>
+                    <span>No events found</span>
+                  </span>
+                </div>
+              </div>
             </div>
           </div>
         </div>
       </div>
     </div>
   </div>
+  <LocationModal
+    v-if="showLocationModal"
+    :location-address="selectedLocation"
+    @close="showLocationModal = false"
+  />
 </template>
 
 <style scoped>
@@ -364,16 +483,25 @@ const dateRanges = ref([
   padding-right: 0.5rem;
 }
 
+.league-options-mobile {
+  max-height: 200px;
+  overflow-y: auto;
+  padding-right: 0.5rem;
+}
+
 /* Custom scrollbar */
-.league-options::-webkit-scrollbar {
+.league-options::-webkit-scrollbar,
+.league-options-mobile::-webkit-scrollbar {
   width: 6px;
 }
 
-.league-options::-webkit-scrollbar-track {
+.league-options::-webkit-scrollbar-track,
+.league-options-mobile::-webkit-scrollbar-track {
   background: #2a2a2a;
 }
 
-.league-options::-webkit-scrollbar-thumb {
+.league-options::-webkit-scrollbar-thumb,
+.league-options-mobile::-webkit-scrollbar-thumb {
   background: #3273dc;
   border-radius: 3px;
 }
@@ -410,21 +538,23 @@ const dateRanges = ref([
 }
 
 .button:active {
-  transform: scale(1.05); /* same as hover */
-  box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1); /* same as hover */
+  transform: scale(1.05);
+  box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
 }
 
 .sidebar-column {
   flex: none;
-  width: 260px; /* or whatever width works best for you */
+  width: 260px;
   max-width: 100%;
 }
 
-.league-options label {
+.league-options label,
+.league-options-mobile label {
   padding-left: 0.4rem;
 }
 
-.league-options {
+.league-options,
+.league-options-mobile {
   line-height: 1.6;
 }
 
@@ -439,5 +569,65 @@ const dateRanges = ref([
 
 .table-container table tbody td {
   text-align: left;
+}
+
+/* Mobile-specific styles */
+@media screen and (max-width: 768px) {
+  .event-table-container {
+    padding: 0.5rem;
+  }
+  
+  .filter-box, .content-box {
+    padding: 1rem;
+  }
+  
+  .event-card {
+    background-color: #252525;
+    border: 1px solid #333;
+  }
+  
+  .buttons .button {
+    margin-bottom: 0.25rem;
+  }
+  
+  .field.is-grouped {
+    flex-wrap: wrap;
+    overflow-x: auto;
+    white-space: nowrap;
+    padding-bottom: 0.5rem;
+  }
+  
+  .field.is-grouped .control {
+    display: inline-block;
+    float: none;
+    margin-bottom: 0.5rem;
+  }
+  
+  /* Make sure select dropdowns are readable on mobile */
+  .select select {
+    max-width: 100%;
+  }
+  
+  /* Adjust table container for mobile */
+  .table-container {
+    overflow-x: auto;
+    -webkit-overflow-scrolling: touch;
+  }
+  
+  /* Mobile-specific button sizing */
+  .button.is-small-mobile {
+    font-size: 0.75rem;
+    padding: 0.25em 0.5em;
+  }
+  
+  .select.is-medium-mobile select {
+    font-size: 1rem;
+    height: 2.25em;
+  }
+}
+
+/* Ensure cards have proper spacing */
+.event-card:not(:last-child) {
+  margin-bottom: 1rem;
 }
 </style>

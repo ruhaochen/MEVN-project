@@ -18,7 +18,7 @@ const emit = defineEmits(['close-league-modal']);
 
 const createLeague = async () => {
     try {
-        const response = await fetch("http://localhost:3000/api/leagues", {
+        const response = await fetch("https://mevn-project-vjik.onrender.com/api/leagues", {
             method: "POST",
             headers: {
                 "Content-Type": "application/json",

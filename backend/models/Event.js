@@ -7,7 +7,7 @@ const eventSchema = new mongoose.Schema({
   date: { type: Date, required: true },
   time: { type: String, required: true },
   opposingTeam: { type: String, required: true },
-  opposingTeamId: { type: mongoose.Schema.Types.ObjectId, ref: "Team", required: true },
+  opposingTeamId: { type: mongoose.Schema.Types.ObjectId, ref: "Team", required: false },
   notes: { type: String },
 });
 

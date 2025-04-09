@@ -100,13 +100,35 @@ router.get("/events", async (req, res) => {
     }
 });
 
+// GET Single Event
+router.get('/events/:id', async (req, res) => {
+  try {
+    if (!mongoose.Types.ObjectId.isValid(req.params.id)) {
+      return res.status(400).json({ success: false, message: "Invalid event ID" });
+    }
+
+    const event = await Event.findById(req.params.id)
+      .populate('leagueId', 'sport ageGroup')
+      .populate('opposingTeamId', 'name school');
+    
+    if (!event) {
+      return res.status(404).json({ success: false, message: "Event not found" });
+    }
+
+    res.json({ success: true, data: event });
+  } catch (error) {
+    console.error("Error fetching event:", error);
+    res.status(500).json({ success: false, message: "Server error" });
+  }
+});
+
 router.post('/events', async (req, res) => {
     try {
         // Validate IDs
         if (!ObjectId.isValid(req.body.leagueId)) {
             return res.status(400).json({ message: "Invalid league ID format" });
         }
-        if (!ObjectId.isValid(req.body.opposingTeamId)) {
+        if (req.body.opposingTeamId && !ObjectId.isValid(req.body.opposingTeamId)) {
             return res.status(400).json({ message: "Invalid team ID format" });
         }
 
@@ -117,7 +139,7 @@ router.post('/events', async (req, res) => {
             date: new Date(req.body.date),
             time: req.body.time,
             opposingTeam: req.body.opposingTeam,
-            opposingTeamId: req.body.opposingTeamId,
+            opposingTeamId: req.body.opposingTeamId || undefined,
             notes: req.body.notes
         });
 
@@ -134,4 +156,57 @@ router.post('/events', async (req, res) => {
     }
 });
 
+router.delete("/events/:id", async (req, res) => {
+    try {
+      const deleted = await Event.findByIdAndDelete(req.params.id);
+      if (!deleted) return res.status(404).json({ message: "Event not found" });
+      res.json({ message: "Event deleted successfully" });
+    } catch (error) {
+      res.status(500).json({ message: "Error deleting event", error });
+    }
+});
+
+// PUT Update Event
+router.put('/events/:id', async (req, res) => {
+  try {
+    if (!mongoose.Types.ObjectId.isValid(req.params.id)) {
+      return res.status(400).json({ success: false, message: "Invalid event ID" });
+    }
+
+    const { type, leagueId, location, date, time, opposingTeamId, opposingTeam, notes } = req.body;
+
+    const updatedEvent = await Event.findByIdAndUpdate(
+      req.params.id,
+      {
+        type,
+        leagueId,
+        location,
+        date: new Date(date),
+        time,
+        opposingTeamId,
+        opposingTeam: opposingTeam || "Bayview Glen",
+        notes
+      },
+      { new: true, runValidators: true }
+    );
+
+    if (!updatedEvent) {
+      return res.status(404).json({ success: false, message: "Event not found" });
+    }
+
+    res.json({ 
+      success: true, 
+      message: "Event updated successfully",
+      data: updatedEvent
+    });
+  } catch (error) {
+    console.error("Error updating event:", error);
+    res.status(500).json({ 
+      success: false, 
+      message: error.message.includes('validation') 
+        ? error.message 
+        : "Server error"
+    });
+  }
+});
 export default router;
