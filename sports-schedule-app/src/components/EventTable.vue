@@ -203,7 +203,7 @@ const dateRanges = ref([
             'is-info': selectedDateRange !== range.value,
             'is-primary': selectedDateRange === range.value
           }"
-          @click="selectedDateRange = range.value">
+          @click="selectedDateRange = selectedDateRange === range.value ? '' : range.value">
           {{ range.label }}
         </button>
       </div>
