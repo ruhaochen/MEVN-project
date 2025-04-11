@@ -2,6 +2,9 @@
 import { ref, watchEffect, onMounted } from 'vue';
 import * as jwt_decode from 'jwt-decode';
 import { Loader } from '@googlemaps/js-api-loader';
+import { useToast } from '../../composables/useToast';
+
+const { showToast } = useToast();
 
 const props = defineProps({
   initialData: {
@@ -93,7 +96,7 @@ const saveTeam = async () => {
 
     if (!response.ok) throw new Error("Failed to save team");
     
-    alert("Team saved successfully!");
+    showToast("Team saved successfully!");
     emit('team-created');
     
     if (!props.isModal) {
@@ -105,7 +108,7 @@ const saveTeam = async () => {
     }
   } catch (error) {
     console.error("Error saving team:", error);
-    alert("Failed to save team");
+    showToast("Failed to save team");
   }
 };
 

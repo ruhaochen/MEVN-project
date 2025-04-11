@@ -1,5 +1,8 @@
 <script setup>
 import { ref, watchEffect } from 'vue';
+import { useToast } from '../../composables/useToast';
+
+const { showToast } = useToast();
 
 const props = defineProps({
   initialData: {
@@ -62,7 +65,7 @@ const saveLeague = async () => {
 
     if (!response.ok) throw new Error("Failed to save league");
     
-    alert("League saved successfully!");
+    showToast("League saved successfully!");
     emit('league-created');
     
     if (!props.isModal) {
@@ -74,6 +77,7 @@ const saveLeague = async () => {
     }
   } catch (error) {
     console.error("Error saving league:", error);
+    showToast("Failed to save league", "danger"); 
     // alert("Failed to save league");
     errorMessage.value = error.message;
   } finally {

@@ -104,7 +104,7 @@
   
       <div class="box content-box">
         <div class="table-container">
-          <table class="table is-fullwidth is-hoverable">
+          <table class="table is-fullwidth is-hoverable left-align">
             <thead>
               <tr>
                 <th>School</th>
@@ -188,5 +188,10 @@
   .modal-card {
     width: 80%;
     max-width: 800px;
+  }
+
+  .left-align th,
+  .left-align td {
+    text-align: left;
   }
 </style>

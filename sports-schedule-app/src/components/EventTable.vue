@@ -30,20 +30,22 @@ const getLocationAddress = async (event) => {
   if (['us-gym', 'prep-gym'].includes(event.location)) {
     return '85 Moatfield Drive, Toronto, ON M3B 3L6, Canada';
   }
-  
+
   // Handle opposing gym - fetch team location
-  if (event.location === 'opposing-gym' && event.opposingTeamId) {
-    try {
-      const team = await fetch(`https://mevn-project-vjik.onrender.com/api/teams/${event.opposingTeamId}`)
-        .then(res => res.json());
-      return team.location || 'Address not available';
-    } catch {
-      return 'Could not load opponent address';
+  if (event.location === 'opposing-gym') {
+    if (event.opposingTeamId) {
+      try {
+        const team = await fetch(`https://mevn-project-vjik.onrender.com/api/teams/${event.opposingTeamId}`)
+          .then(res => res.json());
+        return team.data?.location || 'Address not available';
+      } catch {
+        return 'Could not load opponent address';
+      }
+    } else {
+      return 'Opponent team not set for this event';
     }
   }
-  
-  // If no specific location is set, return a generic message
-  return 'Location not specified';
+
 };
 
 const fetchLeagues = async () => {

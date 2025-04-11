@@ -145,15 +145,15 @@ onMounted(async () => {
       if (status === 'OK' && results[0]) {
         await initMap(results[0].geometry.location, props.locationAddress);
       } else {
-        // Fallback to Bayview Glen if geocoding fails
         errorMessage.value = `Could not find "${props.locationAddress}". Showing Bayview Glen instead.`;
         await initMap(
-          predefinedLocations['us-gym'].coordinates, 
+          predefinedLocations['us-gym'].coordinates,
           predefinedLocations['us-gym'].address
         );
       }
       loading.value = false;
     });
+
   } catch (error) {
     console.error('Error loading Google Maps:', error);
     errorMessage.value = 'Failed to load map service. Please try again later.';

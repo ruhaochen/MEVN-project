@@ -4,6 +4,7 @@ import * as jwt_decode from 'jwt-decode';
 import EventForm from '../components/forms/EventForm.vue';
 
 const events = ref([]);
+const leagues = ref([]);
 const editingEvent = ref(null);
 
 const isAdmin = computed(() => {
@@ -24,6 +25,15 @@ const fetchEvents = async () => {
   } catch (error) {
     console.error("Error fetching events:", error);
   }
+};
+
+const fetchLeagues = async () => {
+    try {
+      const response = await fetch("https://mevn-project-vjik.onrender.com/api/leagues");
+      leagues.value = await response.json();
+    } catch (error) {
+      console.error("Error fetching leagues:", error);
+    }
 };
 
 const deleteEvent = async (id) => {
@@ -62,6 +72,12 @@ const getLocationName = (location) => {
   return locations[location] || location;
 };
 
+const getLeagueName = (leagueId) => {
+    const league = leagues.value.find(l => l._id === leagueId);
+    if (!league) return 'N/A';
+    return `${capitalizeWords(league.sport)} ${capitalizeWords(league.ageGroup)}`;
+};
+
 const capitalizeWords = (str) => {
   return str?.toLowerCase().replace(/\b\w/g, char => char.toUpperCase()) || '';
 };
@@ -77,9 +93,12 @@ const handleEventSaved = () => {
 
 const refreshEvents = () => {
   fetchEvents();
+  fetchLeagues();
 };
 
-onMounted(fetchEvents);
+onMounted(async () => {
+    await Promise.all([fetchEvents(), fetchLeagues()]);
+});
 </script>
 
 <template>
@@ -96,9 +115,10 @@ onMounted(fetchEvents);
   
       <div class="box content-box">
         <div class="table-container">
-          <table class="table is-fullwidth is-hoverable">
+          <table class="table is-fullwidth is-hoverable left-align">
             <thead>
               <tr>
+                <th>League</th>
                 <th>Date</th>
                 <th>Time</th>
                 <th>Type</th>
@@ -110,6 +130,7 @@ onMounted(fetchEvents);
             </thead>
             <tbody>
               <tr v-for="event in events" :key="event._id">
+                <td>{{ getLeagueName(event.leagueId) }}</td>
                 <td>{{ formatDate(event.date) }}</td>
                 <td>{{ formatTime(event.time) }}</td>
                 <td>{{ capitalizeWords(event.type) }}</td>
@@ -188,5 +209,10 @@ onMounted(fetchEvents);
 
   .buttons.are-small .button {
   margin-right: 0.25rem;
+  }
+
+  .left-align th,
+  .left-align td {
+    text-align: left;
   }
 </style>

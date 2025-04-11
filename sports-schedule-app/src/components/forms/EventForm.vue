@@ -1,5 +1,8 @@
 <script setup>
 import { ref, watch, onMounted, watchEffect } from "vue";
+import { useToast } from '../../composables/useToast';
+
+const { showToast } = useToast();
 
 const props = defineProps({
   initialData: {
@@ -148,7 +151,7 @@ const saveEvent = async () => {
 
     if (!response.ok) throw new Error("Failed to save event");
     
-    alert("Event saved successfully!");
+    showToast("Event saved successfully!");
     emit('event-created');
     
     if (!props.isModal) {
@@ -163,7 +166,7 @@ const saveEvent = async () => {
     }
   } catch (error) {
     console.error("Error saving event:", error);
-    alert("Failed to save event");
+    showToast("Failed to save event", "danger");
   }
 };
 
@@ -245,7 +248,7 @@ onMounted(async () => {
                 <option value="" disabled hidden>Select Location</option>
                 <option value="us-gym">Upper School Gym</option>
                 <option value="prep-gym">Prep School Gym</option>
-                <option v-if="opposingTeam?.school" :value="`${opposingTeam.school}-gym`">
+                <option v-if="opposingTeam?.school" value="opposing-gym">
                   {{ opposingTeam.school }} Gym
                 </option>
               </select>
