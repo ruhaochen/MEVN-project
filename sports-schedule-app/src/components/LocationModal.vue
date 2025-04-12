@@ -166,6 +166,28 @@ onUnmounted(() => {
     google.maps.event.clearInstanceListeners(map);
   }
 });
+
+const openInGoogleMaps = () => {
+  let addressToUse;
+  
+  if (errorMessage.value) {
+    addressToUse = predefinedLocations['us-gym'].address;
+  } else {
+    addressToUse = props.locationAddress;
+  }
+
+  // Detect if user is on mobile
+  const isMobile = /iPhone|iPad|iPod|Android/i.test(navigator.userAgent);
+  const encodedAddress = encodeURIComponent(addressToUse);
+  
+  if (isMobile) {
+    // Try to open directly in Google Maps app
+    window.location.href = `https://maps.google.com/maps?q=${encodedAddress}`;
+  } else {
+    // Desktop - open in new tab
+    window.open(`https://www.google.com/maps/search/?api=1&query=${encodedAddress}`, '_blank');
+  }
+};
 </script>
 
 <template>
@@ -192,11 +214,15 @@ onUnmounted(() => {
             <div ref="mapContainer" class="map-container"></div>
             <div class="content mt-4">
               <p class="has-text-centered">
-                <span class="icon-text">
+                <span 
+                  class="icon-text is-align-items-center" 
+                  @click="openInGoogleMaps" 
+                  style="cursor: pointer;"
+                >
                   <span class="icon">
                     <i class="fas fa-map-marker-alt has-text-danger"></i>
                   </span>
-                  <span>
+                  <span class="is-inline-block">
                     {{ errorMessage ? '85 Moatfield Drive, Toronto, ON' : locationAddress }}
                   </span>
                 </span>
@@ -233,4 +259,43 @@ onUnmounted(() => {
 .modal-card-body > div {
   padding: 1.5rem;
 }
+
+.icon-text {
+  transition: transform 0.1s;
+  display: inline-flex; /* Better for mobile touch targets */
+  padding: 4px 8px; /* Larger touch area */
+  border-radius: 4px; /* Visual feedback area */
+}
+
+.icon-text.is-active {
+  transform: scale(0.98);
+  background-color: #f5f5f5;
+}
+
+@media (max-width: 768px) {
+  .icon-text {
+    padding: 8px 12px;
+  }
+}
+
+.icon-text:hover {
+  text-decoration: underline;
+  color: #3273dc;
+}
+
+.icon-text {
+  display: inline-flex;
+  align-items: center;
+}
+
+.icon {
+  margin-right: 0.5rem;
+}
+
+@media (max-width: 768px) {
+  .icon-text {
+    flex-wrap: nowrap; 
+  }
+}
+
 </style>
