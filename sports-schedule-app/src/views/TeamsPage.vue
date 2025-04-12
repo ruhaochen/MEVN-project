@@ -229,14 +229,6 @@ onMounted(async () => {
     padding: 0.5rem 0;
   }
 
-  .table td.right-align {
-    justify-content: flex-end; /* Aligns content to right in mobile view */
-  }
-
-  .table td.right-align::before {
-    margin-right: auto; /* Pushes the label to the left */
-  }
-
   .table td {
     display: flex;
     justify-content: space-between;

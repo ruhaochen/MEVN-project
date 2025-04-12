@@ -64,12 +64,13 @@ const formatTime = (timeString) => {
   return new Date(`2000-01-01T${timeString}`).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
 };
 
-const getLocationName = (location) => {
+const getLocationName = (event) => {
   const locations = {
     'us-gym': 'Upper School Gym',
-    'prep-gym': 'Prep School Gym'
+    'prep-gym': 'Prep School Gym',
+    'opposing-gym': event.opposingTeam + " Gym"
   };
-  return locations[location] || location;
+  return locations[event.location];
 };
 
 const getLeagueName = (leagueId) => {
@@ -135,7 +136,7 @@ onMounted(async () => {
                 <td data-label="Time">{{ formatTime(event.time) }}</td>
                 <td data-label="Type">{{ capitalizeWords(event.type) }}</td>
                 <td data-label="Opponent">{{ event.opposingTeam || 'Bayview Glen' }}</td>
-                <td data-label="Location">{{ getLocationName(event.location) }}</td>
+                <td data-label="Location" class="mobile-right-align">{{ getLocationName(event) }}</td>
                 <td data-label="Notes">{{ event.notes || '-' }}</td>
                 <td v-if="isAdmin" class="actions-cell">
                   <div class="buttons are-small">
@@ -253,6 +254,16 @@ onMounted(async () => {
 
   .table td:last-child {
     border-bottom: none; /* Remove border from last cell */
+  }
+
+  .table td.mobile-right-align {
+    justify-content: flex-end; /* Aligns content to right */
+    text-align: right; /* Ensures text aligns right */
+  }
+  
+  .table td.mobile-right-align::before {
+    margin-right: auto; /* Pushes the label to the left */
+    text-align: left; /* Keeps label left-aligned */
   }
 
   .table td::before {

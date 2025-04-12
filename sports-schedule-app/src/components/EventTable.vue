@@ -595,11 +595,11 @@ const dateRanges = ref([
 /* Mobile-specific styles */
 @media screen and (max-width: 768px) {
   .event-table-container {
-    padding: 0.5rem;
+    padding: 0.25rem;
   }
   
   .filter-box, .content-box {
-    padding: 1rem;
+    padding: 0.5rem;
   }
   
   .event-card {
@@ -670,7 +670,7 @@ const dateRanges = ref([
 }
 
 .event-card-content {
-  padding: 0.5rem 0.5rem; /* slightly larger padding for breathing room */
+  padding: 0.5rem 0rem; /* slightly larger padding for breathing room */
 }
 
 .event-datetime {
