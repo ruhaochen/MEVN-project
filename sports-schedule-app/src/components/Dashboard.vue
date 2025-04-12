@@ -149,7 +149,7 @@ const closeLeagueModal = () => {
                 <span class="icon">
                   <i class="fas fa-sign-out-alt"></i>
                 </span>
-                <span class="is-hidden-mobile">Logout</span>
+                <span class>Logout</span>
               </button>
             </div>
           </div>
@@ -217,5 +217,23 @@ const closeLeagueModal = () => {
   .navbar-brand .navbar-item {
     padding: 0.5rem 0.75rem;
   }
+}
+
+@media (max-width: 768px) {
+  .table-container {
+    width: 100%;
+    overflow-x: auto !important;
+    -webkit-overflow-scrolling: touch;
+    display: block;
+  }
+
+  .table {
+    min-width: 600px;
+    width: max-content;
+  }
+}
+
+.table-container {
+  overflow: auto !important;
 }
 </style>

@@ -48,6 +48,19 @@ const getLocationAddress = async (event) => {
 
 };
 
+const getLocationLabel = (event) => {
+  if (event.location === 'us-gym') {
+    return 'Upper School Gym';
+  }
+  if (event.location === 'prep-gym') {
+    return 'Prep Gym';
+  }
+  if (event.location === 'opposing-gym') {
+    return event.opposingTeam + ' Gym';
+  }
+  return event.location || 'Unknown';
+};
+
 const fetchLeagues = async () => {
     const response = await fetch("https://mevn-project-vjik.onrender.com/api/leagues");
     leagues.value = await response.json();
@@ -210,7 +223,7 @@ const dateRanges = ref([
     </div>
 
     <!-- Main Content -->
-    <div class="columns is-desktop is-gapless is-mobile">
+    <div class="columns is-desktop is-gapless">
       <!-- League Filter Column -->
       <div class="column is-3-widescreen is-4-desktop is-12-mobile">
         <div class="box filter-box sidebar-box is-hidden-mobile">
@@ -329,7 +342,7 @@ const dateRanges = ref([
                   <td class="has-text-light">{{ formatDate(event.date) }}</td>
                   <td class="has-text-light">{{ formatTime(event.time) }}</td>
                   <td class="has-text-light">{{ capitalizeWords(event.type) }}</td>
-                  <td class="has-text-light">{{ event.location }}</td>
+                  <td class="has-text-light">{{ getLocationLabel(event) }}</td>
                   <td class="has-text-light">{{ event.opposingTeam }}</td>
                   <td class="has-text-light">{{ event.notes }}</td>
                   <td>
@@ -351,68 +364,74 @@ const dateRanges = ref([
             
             <!-- Mobile cards view -->
             <div class="is-hidden-tablet">
-              <div v-for="event in events" :key="event._id" class="card mb-3 event-card">
-                <div class="card-content">
-                  <div class="media">
-                    <div class="media-content">
-                      <p class="title is-5 has-text-light">{{ capitalizeWords(event.type) }}</p>
-                      <p class="subtitle is-6 has-text-info">
-                        {{ formatDate(event.date) }} at {{ formatTime(event.time) }}
-                      </p>
-                    </div>
+              <div
+                v-for="event in events"
+                :key="event._id"
+                class="card mb-4 event-card"
+              >
+                <div class="card-content event-card-content">
+                  <!-- Event Header -->
+                  <div class="mb-3">
+                    <p class="title is-5 has-text-light mb-2">{{ capitalizeWords(event.type) }}</p>
+                    <p class="is-flex is-align-items-center is-6 has-text-info event-datetime">
+                      <span class="icon mr-2">
+                        <i class="fas fa-calendar-day"></i>
+                      </span>
+                      <span>{{ formatDate(event.date) }} at {{ formatTime(event.time) }}</span>
+                    </p>
                   </div>
-                  
+
+                  <!-- Event Details -->
                   <div class="content">
-                    <p class="has-text-light">
-                      <span class="icon-text">
-                        <span class="icon has-text-info">
-                          <i class="fas fa-map-marker-alt"></i>
-                        </span>
-                        <span>{{ event.location }}</span>
+                    <!-- Location -->
+                    <div class="is-flex is-align-items-center mb-2">
+                      <span class="icon has-text-info mr-2">
+                        <i class="fas fa-map-marker-alt"></i>
                       </span>
-                    </p>
-                    
-                    <p class="has-text-light">
-                      <span class="icon-text">
-                        <span class="icon has-text-info">
-                          <i class="fas fa-users"></i>
-                        </span>
-                        <span>vs {{ event.opposingTeam }}</span>
+                      <span class="has-text-light">{{ getLocationLabel(event) }}</span>
+                    </div>
+
+                    <!-- Opponent -->
+                    <div class="is-flex is-align-items-center mb-2">
+                      <span class="icon has-text-info mr-2">
+                        <i class="fas fa-users"></i>
                       </span>
-                    </p>
-                    
-                    <p v-if="event.notes" class="has-text-light mt-2">
-                      <span class="icon-text">
-                        <span class="icon has-text-info">
-                          <i class="fas fa-sticky-note"></i>
-                        </span>
-                        <span>{{ event.notes }}</span>
+                      <span class="has-text-light">vs {{ event.opposingTeam }}</span>
+                    </div>
+
+                    <!-- Notes -->
+                    <div v-if="event.notes" class="is-flex is-align-items-center mb-2">
+                      <span class="icon has-text-info mr-2">
+                        <i class="fas fa-sticky-note"></i>
                       </span>
-                    </p>
-                    
+                      <span class="has-text-light">{{ event.notes }}</span>
+                    </div>
+
+                    <!-- Action Buttons -->
                     <div class="buttons mt-3">
                       <button 
-                        class="button is-info is-outlined is-small" 
+                        class="button is-info is-outlined is-small action-btn" 
                         title="View Location"
                         @click="viewLocation(event)"
                       >
                         <span class="icon">
                           <i class="fas fa-map-marker-alt"></i>
                         </span>
-                        <span>Location</span>
+                        <span>View Map</span>
                       </button>
                     </div>
                   </div>
                 </div>
               </div>
-              
+
+              <!-- Empty State -->
               <div v-if="!events.length" class="has-text-centered py-4">
-                <div class="notification is-dark">
+                <div class="notification is-dark empty-state">
                   <span class="icon-text">
                     <span class="icon">
                       <i class="fas fa-calendar-times"></i>
                     </span>
-                    <span>No events found</span>
+                    <span>No upcoming events</span>
                   </span>
                 </div>
               </div>
@@ -631,5 +650,32 @@ const dateRanges = ref([
 /* Ensure cards have proper spacing */
 .event-card:not(:last-child) {
   margin-bottom: 1rem;
+}
+
+@media (max-width: 768px) {
+  .table-container {
+    width: 100%;
+    overflow-x: auto !important;
+    -webkit-overflow-scrolling: touch;
+    display: block;
+  }
+
+  .table {
+    min-width: 600px;
+    width: max-content;
+  }
+}
+.table-container {
+  overflow: auto !important;
+}
+
+.event-card-content {
+  padding: 0.5rem 0.5rem; /* slightly larger padding for breathing room */
+}
+
+.event-datetime {
+  white-space: nowrap; /* keep the date and time on one line */
+  overflow: hidden;
+  text-overflow: ellipsis;
 }
 </style>
